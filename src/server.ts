@@ -1,52 +1,76 @@
-import { ApolloServer, gql } from 'apollo-server';
-import { randomUUID } from 'node:crypto';
+import { ApolloServer } from 'apollo-server';
+import path from 'node:path';
+import "reflect-metadata";
+import { buildSchema } from 'type-graphql';
+import { AppointmentsResolver } from './resolvers/appointments-resolver';
 
-const typeDefs = gql`
-  type User {
-    id: String!
-    name: String!
-  }
+async function bootstrap() {
+  const schema = await buildSchema({
+    resolvers: [
+      AppointmentsResolver
+    ],
+    emitSchemaFile: path.resolve(__dirname, 'schema.gql'),
+  })
 
-  type Query {
-    users: [User!]!
-  }
+  const server = new ApolloServer({
+    schema
+  });
 
-  type Mutation {
-    createUser(name: String!): User!
-  }
-`
-
-interface User {
-  id: string;
-  name: string
+  const { url } = await server.listen();
+  console.log(`🟢 HTTP server running on ${url}`)
 }
 
-const users: User[] = [];
+bootstrap();
 
-const server = new ApolloServer({
-  typeDefs,
-  resolvers: {
-    Query: {
-      users: () => {
-        return users;
-      }
-    },
+// import { ApolloServer, gql } from 'apollo-server';
+// import { randomUUID } from 'node:crypto';
 
-    Mutation: {
-      createUser: (_, args) => {
-        const user = {
-          id: randomUUID(),
-          name: args.name
-        };
+// const typeDefs = gql`
+//   type User {
+//     id: String!
+//     name: String!
+//   }
 
-        users.push(user);
+//   type Query {
+//     users: [User!]!
+//   }
 
-        return user;
-      }
-    }
-  }
-});
+//   type Mutation {
+//     createUser(name: String!): User!
+//   }
+// `
 
-server.listen().then(({ url }) => {
-  console.log(`🟢 HTTP server running on ${url}`)
-});
+// interface User {
+//   id: string;
+//   name: string
+// }
+
+// const users: User[] = [];
+
+// const server = new ApolloServer({
+//   typeDefs,
+//   resolvers: {
+//     Query: {
+//       users: () => {
+//         return users;
+//       }
+//     },
+
+//     Mutation: {
+//       createUser: (_, args) => {
+//         const user = {
+//           id: randomUUID(),
+//           name: args.name
+//         };
+
+//         users.push(user);
+
+//         return user;
+//       }
+//     }
+//   }
+// });
+
+// server.listen().then(({ url }) => {
+//   console.log(`🟢 HTTP server running on ${url}`)
+// });
